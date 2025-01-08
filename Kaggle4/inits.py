@@ -37,21 +37,20 @@ def load_data(im_size=150):
         except DownloadError as e:
             raise DownloadError(f"Could not find {img_dir} and downloading {img_dir + '.zip'} from the following URL failed. Please provide the data.\n{e.url}") from e
 
-    train_datagen = ImageDataGenerator(rotation_range=40, 
-                                    #   rescale=1./255, 
-                                       width_shift_range=0.4, 
-                                       height_shift_range=0.4, 
-                                       shear_range=0.4, 
-                                       zoom_range=0.4, 
+    train_datagen = ImageDataGenerator(rotation_range=30, 
+                                       rescale=1./255, 
+                                       width_shift_range=0.25, 
+                                       height_shift_range=0.25, 
+                                       shear_range=0.25, 
+                                       zoom_range=0.25, 
                                        horizontal_flip=True,
-                                       preprocessing_function=preprocess_input,
                                        validation_split=0.2)
     
     train_generator = train_datagen.flow_from_directory(
             directory=r'./' + x_train_dir, 
             target_size=(im_size, im_size),
             color_mode='rgb', 
-            batch_size=64, 
+            batch_size=32, 
             class_mode='categorical', 
             shuffle=True, 
             subset='training')
@@ -59,7 +58,7 @@ def load_data(im_size=150):
             directory='./' + x_train_dir,
             target_size=(im_size, im_size),
             color_mode='rgb',
-            batch_size=64,
+            batch_size=32,
             class_mode='categorical',
             shuffle=False,
             subset='validation')
