@@ -9,7 +9,7 @@ from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, BatchNormalization, 
 from keras.regularizers import l2
 from keras.applications.vgg16 import VGG16, preprocess_input
 from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 from inits import load_data, x_test_dir
 
@@ -35,19 +35,19 @@ cnn.add(Dense(256, activation='relu', kernel_initializer='he_uniform', kernel_re
 cnn.add(Dropout(0.5))
 cnn.add(Dense(6, activation='softmax'))
 
-cnn.compile(optimizer=Adam(learning_rate=1e-3),loss='categorical_crossentropy',metrics=['accuracy', 'precision', 'recall'])
-es = EarlyStopping( monitor='val_loss', patience=7, restore_best_weights=True )
-cnn.fit(train_generator, epochs=50, validation_data=val_generator, callbacks=[es], verbose=True)
-
+cnn.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy', 'precision', 'recall'])
+earlystop = EarlyStopping( monitor='val_loss', patience=12, restore_best_weights=True )
+checkpoint = ModelCheckpoint('TomTheiss.weights.h5', monitor='val_accuracy', mode='max', verbose=False, save_weights_only=True, save_best_only=True)
+cnn.fit(train_generator, epochs=50, validation_data=val_generator, callbacks=[earlystop, checkpoint], verbose=True)
+cnn.save("model.keras")
 
 for layer in stumpVGG16.layers[-4:]: layer.trainable = True
 cnn.compile(optimizer=Adam(learning_rate=1e-4),loss='categorical_crossentropy',metrics=['accuracy', 'precision', 'recall'])
-cnn.fit(train_generator, epochs=10, validation_data=val_generator, verbose=True)
+cnn.fit(train_generator, epochs=15, validation_data=val_generator, callbacks=[earlystop, checkpoint], verbose=True)
 
 cnn.save_weights('TomTheiss.weights.h5')
 cnn.save("model.keras")
 cnn.summary()
-
 
 # %% evaluation on test set
 # test evaluation
