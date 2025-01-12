@@ -4,10 +4,10 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 # from keras.utils import load_img
 from keras.preprocessing.image import img_to_array, load_img
-from keras.models import Sequential, Model, load_model
-from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, BatchNormalization, Dropout
+from keras.models import Sequential, load_model
+from keras.layers import Dense, Flatten, BatchNormalization, Dropout
 from keras.regularizers import l2
-from keras.applications.vgg16 import VGG16, preprocess_input
+from keras.applications.vgg16 import VGG16
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
