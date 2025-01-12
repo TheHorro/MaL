@@ -26,9 +26,8 @@ def divValTrainSet(XTrain,yTrain):
 
 ##Daten kommen optimiert fuer klassische neuronale Netze, daher wieder in Bildformat bringen
 img_rows, img_cols = 28, 28
-XTrain = XTrain.reshape(XTrain.shape[0], img_rows, img_cols, 1)
-XTest = XTest.reshape(XTest.shape[0], img_rows, img_cols, 1)
-input_shape = (img_rows, img_cols, 1)
+XTrain = XTrain.reshape(XTrain.shape[0], img_rows, img_cols, 1).astype('float32') / 255.0
+XTest = XTest.reshape(XTest.shape[0], img_rows, img_cols, 1).astype('float32') / 255.0
 
 yTrain = to_categorical(yTrain)
 yTest = to_categorical(yTest)
@@ -45,33 +44,36 @@ from keras.regularizers import l2
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
-l2Reg = 1e-5
+l2Reg = 5e-5
 cnn = Sequential()
 cnn.add(BatchNormalization())
-cnn.add(Conv2D(16, (2, 2), activation='relu', kernel_initializer='he_normal', input_shape=(28,28,1), kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(16, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(16, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg), input_shape=(28,28,1)))
+cnn.add(Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
 cnn.add(MaxPool2D(pool_size=(2, 2)))
 cnn.add(BatchNormalization())
-cnn.add(Conv2D(32, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(32, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(32, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
 cnn.add(MaxPool2D(pool_size=(2, 2)))
 cnn.add(BatchNormalization())
-cnn.add(Conv2D(64, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(64, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
-cnn.add(Conv2D(64, (2, 2), activation='relu', kernel_initializer='he_normal', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+cnn.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
+# cnn.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', kernel_regularizer=l2(l2Reg)))
 cnn.add(Flatten())
+cnn.add(Dense(512, activation='relu', kernel_initializer='he_uniform', kernel_regularizer=l2(l2Reg)))
+#cnn.add(Dropout(0.5))
 cnn.add(Dense(256, activation='relu', kernel_initializer='he_uniform', kernel_regularizer=l2(l2Reg)))
-cnn.add(Dropout(0.5))
+#cnn.add(Dropout(0.5))
 cnn.add(Dense(128, activation='relu', kernel_initializer='he_uniform', kernel_regularizer=l2(l2Reg)))
-cnn.add(Dropout(0.5))
+#cnn.add(Dropout(0.5))
 cnn.add(Dense(10, activation='softmax'))
 
 cnn.compile(optimizer=Adam(learning_rate=1e-3), loss='categorical_crossentropy', metrics=['accuracy'])
-earlystop = EarlyStopping( monitor='val_loss', patience=5, restore_best_weights=True )
+earlystop = EarlyStopping( monitor='val_loss', patience=4, restore_best_weights=True )
 checkpoint = ModelCheckpoint('bestW.weights.h5', monitor='val_loss', verbose=False, save_weights_only=True, save_best_only=True)
-cnn.fit(XTrain, yTrain, epochs=20, validation_data=(XVal, yVal), callbacks=[earlystop, checkpoint], verbose=True)
+cnn.fit( XTrain, yTrain, epochs=20, validation_data=(XVal, yVal), callbacks=[earlystop, checkpoint], verbose=True)
 cnn.save("model.keras")
 cnn.summary()
 
