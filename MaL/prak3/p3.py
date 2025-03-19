@@ -8,6 +8,12 @@ session = tf.compat.v1.Session(config=config)
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix
+from keras.models import Sequential, load_model
+from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, BatchNormalization, Dropout
+from keras.regularizers import l2
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 np.random.seed(42)
 
@@ -73,22 +79,25 @@ cnn.add(Dense(10, activation='softmax'))
 cnn.compile(optimizer=Adam(learning_rate=1e-3), loss='categorical_crossentropy', metrics=['accuracy'])
 earlystop = EarlyStopping( monitor='val_loss', patience=4, restore_best_weights=True )
 checkpoint = ModelCheckpoint('bestW.weights.h5', monitor='val_loss', verbose=False, save_weights_only=True, save_best_only=True)
-cnn.fit( XTrain, yTrain, epochs=20, validation_data=(XVal, yVal), callbacks=[earlystop, checkpoint], verbose=True)
-cnn.save("model.keras")
+# cnn.fit( XTrain, yTrain, epochs=20, validation_data=(XVal, yVal), callbacks=[earlystop, checkpoint], verbose=True)
+# cnn.save("model.keras")
 cnn.summary()
 
 # %% evaluation
 # evaluation
+cnn = load_model('model.keras')
+cnn.load_weights('bestW.weights.h5')
+
 def eval(X, y, label:str):
-	cnn = load_model('model.keras')
-	cnn.load_weights('bestW.weights.h5')
 	score = cnn.evaluate(X, y, verbose=False)
 	print("Accuracy %s:\t%.2f%%" % (label, score[1]*100))
 	yp = cnn.predict(X, verbose=False)
 	yp = np.argmax(yp, axis=1)
 	y_labels = np.argmax(y, axis=1)
 	print(f'Confusion Matrix {label}')
-	print(confusion_matrix(y_labels, yp))
+	mat = np.zeros((10,10), dtype=(np.int32))
+	for i in range(y_labels.shape[0]): mat[y_labels[i],yp[i]] += 1
+	print(mat)
 
 eval(XTrain, yTrain, 'train')
 eval(XVal, yVal, 'validation')
